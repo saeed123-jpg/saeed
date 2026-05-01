@@ -1,0 +1,11 @@
+#root {
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+}
+
+.nav-links a[href="#/history"] {
+  font-weight: 900;
+}
