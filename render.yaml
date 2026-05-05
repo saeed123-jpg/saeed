@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: palestine-atlas
+    runtime: static
+    repo: https://github.com/saeed123-jpg/saeed
+    branch: main
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    autoDeployTrigger: commit
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

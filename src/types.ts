@@ -7,7 +7,6 @@ export type City = {
   legacyCategory?: string;
   region: string;
   wikiTitle: string;
-  aiImage: string;
   realImage: string;
   realSource: string;
   oldImageSearch: string[];
