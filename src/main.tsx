@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { CITY_GROUPS, PALESTINE_CITIES } from "./data/cities";
-import { HISTORY_GROUPS, PALESTINE_HISTORY_EVENTS } from "./data/history";
+import { CITY_GROUPS, PALESTINE_CITIES } from "./data/cities.js";
+import { HISTORY_GROUPS, PALESTINE_HISTORY_EVENTS } from "./data/history.js";
 import {
   HOME_ERAS,
   HOME_GALLERY,

@@ -8,3 +8,5 @@ public/assets/images/ai-cities/*.png
 *.log
 *.tsbuildinfo
 verification-*.png
+
+.vercel
