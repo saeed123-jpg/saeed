@@ -16,7 +16,8 @@ import {
   HOME_THEMES
 } from "./data/home";
 import { ATLAS_FIGURES, ATLAS_VILLAGES, CITY_MAP_POINTS } from "./data/atlas-additions";
-import type { City, HistoryEvent } from "./types";
+import { getVillagesForCity } from "./data/city-villages";
+import type { City, CityVillage, HistoryEvent } from "./types";
 import "./styles.css";
 import "./react-overrides.css";
 
@@ -238,9 +239,15 @@ function CityMenu() {
             <section className="city-menu-group" key={group.key}>
               <h3>{group.label}</h3>
               <div className="city-menu-links">
-                {group.cities.map((city) => (
-                  <a href={pathFor(`city/${city.id}`)} key={city.id} onClick={closeMenuAfterChoice}>{city.name}</a>
-                ))}
+                {group.cities.map((city) => {
+                  const villageCount = getVillagesForCity(city.id).length;
+                  return (
+                    <a href={pathFor(`city/${city.id}`)} key={city.id} onClick={closeMenuAfterChoice}>
+                      <span>{city.name}</span>
+                      {villageCount > 0 && <small>{villageCount} قرية</small>}
+                    </a>
+                  );
+                })}
               </div>
             </section>
           ))}
@@ -1260,6 +1267,7 @@ function CitiesPage() {
 }
 
 function CityCard({ city }: { city: City }) {
+  const villageCount = getVillagesForCity(city.id).length;
   return (
     <article className="city-card">
       <CommonsImage queries={city.modernImageSearch} alt={`صورة حقيقية مرتبطة بمدينة ${city.name}`} placeholder="جاري تحميل صورة حقيقية..." />
@@ -1267,6 +1275,7 @@ function CityCard({ city }: { city: City }) {
         <span className="city-card-region">{city.region}</span>
         <h4>{city.name}</h4>
         <p>{city.summary}</p>
+        {villageCount > 0 && <strong className="city-village-count">{villageCount} قرية وبلدة في النطاق</strong>}
         <a href={pathFor(`city/${city.id}`)}>فتح صفحة المدينة</a>
         <FavoriteButton item={{ id: city.id, type: "city", title: city.name, subtitle: city.region, href: pathFor(`city/${city.id}`) }} />
       </div>
@@ -1312,6 +1321,7 @@ function CityPage({ id }: { id?: string }) {
   const city = cities.find((item) => item.id === id) || cities[0];
   const group: any = CITY_GROUPS[city.category];
   const related = cities.filter((item) => item.category === city.category && item.id !== city.id).slice(0, 6);
+  const cityVillages = getVillagesForCity(city.id);
 
   return (
     <main>
@@ -1331,6 +1341,7 @@ function CityPage({ id }: { id?: string }) {
           <h2>{city.name}</h2>
           <p>{city.region}</p>
           <div className="tags">{city.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
+          {cityVillages.length > 0 && <p className="city-village-side-note">يضم هذا النطاق {cityVillages.length} قرية/بلدة موثقة في الصفحة.</p>}
           <FavoriteButton item={{ id: city.id, type: "city", title: city.name, subtitle: city.region, href: pathFor(`city/${city.id}`) }} />
         </aside>
         <article className="city-story">
@@ -1345,12 +1356,67 @@ function CityPage({ id }: { id?: string }) {
           <ul className="feature-list">{city.highlights.map((item) => <li key={item}>{item}</li>)}</ul>
         </article>
       </section>
+      <CityVillagesSection city={city} villages={cityVillages} />
       <CityImages city={city} />
       <section className="related-cities band">
         <div className="section-heading"><p className="kicker">مدن ذات صلة</p><h2>من نفس التصنيف</h2></div>
         <div className="related-grid">{related.map((item) => <a href={pathFor(`city/${item.id}`)} key={item.id}>{item.name}<span>{item.region}</span></a>)}</div>
       </section>
     </main>
+  );
+}
+
+function CityVillagesSection({ city, villages }: { city: City; villages: CityVillage[] }) {
+  const [query, setQuery] = useState("");
+  const [showAll, setShowAll] = useState(false);
+  const filtered = villages.filter((village) =>
+    normalize([village.name, village.searchName || "", village.district, village.summary, ...village.tags].join(" ")).includes(normalize(query))
+  );
+  const visible = showAll || query ? filtered : filtered.slice(0, 12);
+
+  if (!villages.length) return null;
+
+  return (
+    <section className="city-villages band" aria-labelledby="city-villages-title">
+      <div className="section-heading">
+        <p className="kicker">قرى وبلدات النطاق</p>
+        <h2 id="city-villages-title">قرى {city.name} ومحيطها</h2>
+        <p>قائمة منظمة للقرى والبلدات والمخيمات أو القرى المهجرة المرتبطة بنطاق المدينة، مع شرح مختصر وصورة حقيقية يتم تحميلها من Wikimedia Commons عند توفرها.</p>
+      </div>
+      <div className="city-village-toolbar">
+        <label htmlFor={`village-search-${city.id}`}>بحث داخل قرى {city.name}</label>
+        <input
+          id={`village-search-${city.id}`}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="اكتب اسم قرية أو بلدة..."
+        />
+        <span>{filtered.length} نتيجة</span>
+      </div>
+      <div className="city-village-grid">
+        {visible.map((village) => <CityVillageCard village={village} key={village.id} />)}
+      </div>
+      {!query && filtered.length > visible.length && (
+        <button className="load-more-button" type="button" onClick={() => setShowAll(true)}>
+          عرض كل القرى ({filtered.length})
+        </button>
+      )}
+    </section>
+  );
+}
+
+function CityVillageCard({ village }: { village: CityVillage }) {
+  return (
+    <article className="city-village-card">
+      <CommonsImage queries={village.imageQueries} alt={`صورة حقيقية مرتبطة بقرية ${village.name}`} placeholder={`جاري تحميل صورة من ${village.name}...`} />
+      <div>
+        <span>{village.relation}</span>
+        <h3>{village.name}</h3>
+        <p>{village.summary}</p>
+        <div className="tags">{village.tags.map((tag) => <span className="tag" key={`${village.id}-${tag}`}>{tag}</span>)}</div>
+        <a className="source-chip" href={village.sourceHref} target="_blank" rel="noreferrer">مصدر القوائم</a>
+      </div>
+    </article>
   );
 }
 

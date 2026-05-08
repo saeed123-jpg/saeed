@@ -20,6 +20,20 @@ export type City = {
   tags: string[];
 };
 
+export type CityVillage = {
+  id: string;
+  cityId: string;
+  name: string;
+  searchName?: string;
+  district: string;
+  type: "village" | "municipality" | "camp" | "neighborhood" | "depopulated";
+  relation: string;
+  summary: string;
+  imageQueries: string[];
+  sourceHref: string;
+  tags: string[];
+};
+
 export type HistoryEvent = {
   category: string;
   period: string;

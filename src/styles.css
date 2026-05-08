@@ -362,11 +362,20 @@ body {
 .city-menu-links a {
   min-height: 36px;
   display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
   align-items: center;
   border-radius: 8px;
   padding: 6px 9px;
   color: rgba(255, 255, 255, 0.82);
   background: rgba(255, 255, 255, 0.04);
+}
+
+.city-menu-links a small {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .hero {
@@ -1753,6 +1762,17 @@ figcaption {
   color: var(--muted);
 }
 
+.city-village-count {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  padding: 5px 10px;
+  background: rgba(47, 127, 171, 0.1);
+  color: #195678;
+  font-size: 0.86rem;
+}
+
 .city-card a {
   display: inline-flex;
   align-items: center;
@@ -1895,6 +1915,102 @@ figcaption {
 
 .city-media {
   background: #eef2ef;
+}
+
+.city-village-side-note {
+  margin-top: 16px;
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(47, 127, 171, 0.1);
+  color: #195678;
+  font-weight: 900;
+}
+
+.city-villages {
+  background: #f7f4ee;
+}
+
+.city-village-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--surface);
+}
+
+.city-village-toolbar label {
+  color: var(--olive-dark);
+  font-weight: 900;
+}
+
+.city-village-toolbar input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.city-village-toolbar span {
+  white-space: nowrap;
+  color: var(--clay);
+  font-weight: 900;
+}
+
+.city-village-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.city-village-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 16px 34px rgba(24, 32, 30, 0.08);
+}
+
+.city-village-card > img,
+.city-village-card > .media-placeholder {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.city-village-card > div {
+  padding: 18px;
+}
+
+.city-village-card span {
+  color: var(--clay);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.city-village-card h3 {
+  margin: 6px 0 10px;
+}
+
+.city-village-card p {
+  color: #3c4742;
+}
+
+.load-more-button {
+  min-height: 46px;
+  margin-top: 22px;
+  border: 1px solid var(--olive);
+  border-radius: 8px;
+  padding: 0 18px;
+  background: var(--olive);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 900;
 }
 
 .city-media-grid {
@@ -2790,6 +2906,7 @@ figcaption {
   .dossier-grid,
   .heritage-grid,
   .quick-result-grid,
+  .city-village-grid,
   .theme-grid,
   .milestone-grid,
   .glossary-grid,
@@ -2807,6 +2924,7 @@ figcaption {
   .city-menu-groups,
   .city-index-group,
   .city-detail,
+  .city-village-toolbar,
   .city-media-grid,
   .city-pager {
     grid-template-columns: 1fr;
@@ -2959,6 +3077,8 @@ figcaption {
   .review-card-grid,
   .history-learning-grid,
   .city-learning-grid,
+  .city-village-grid,
+  .city-village-toolbar,
   .city-card-grid,
   .history-stats,
   .feature-list,
