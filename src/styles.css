@@ -163,6 +163,44 @@ a {
   background: rgba(195, 148, 63, 0.2);
 }
 
+.install-app-panel {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 12px;
+  align-items: center;
+  width: min(620px, 100%);
+  margin-bottom: 18px;
+  border: 1px solid rgba(247, 244, 238, 0.22);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(24, 32, 30, 0.52);
+  color: #fff;
+  backdrop-filter: blur(14px);
+}
+
+.install-app-panel button {
+  min-height: 42px;
+  border: 1px solid var(--gold);
+  border-radius: 8px;
+  padding: 0 14px;
+  background: var(--gold);
+  color: #111715;
+  cursor: pointer;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.install-app-panel span {
+  color: rgba(255, 255, 255, 0.84);
+  font-weight: 800;
+}
+
+.install-app-panel small {
+  grid-column: 1 / -1;
+  color: #f7e4b9;
+  font-weight: 800;
+}
+
 .language-button-mark {
   display: inline-grid;
   place-items: center;
@@ -3200,6 +3238,14 @@ figcaption {
 
   .hero-content {
     margin: 0 auto 26px;
+  }
+
+  .install-app-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .install-app-panel button {
+    width: 100%;
   }
 
   .hero-shade {

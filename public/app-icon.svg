@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="أيقونة أطلس فلسطين التاريخي">
+  <rect width="512" height="512" rx="108" fill="#18201e"/>
+  <path d="M256 74 438 256 256 438 74 256Z" fill="none" stroke="#c3943f" stroke-width="50" stroke-linejoin="round"/>
+  <path d="M256 74 438 256" fill="none" stroke="#226b80" stroke-width="50" stroke-linecap="round"/>
+  <path d="M152 258h208" stroke="#f7f4ee" stroke-width="24" stroke-linecap="round"/>
+  <path d="M256 150v216" stroke="#f7f4ee" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="42" fill="#49633a" stroke="#f7f4ee" stroke-width="14"/>
+</svg>

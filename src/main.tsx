@@ -28,6 +28,11 @@ declare global {
   }
 }
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
+
 const cities = PALESTINE_CITIES as City[];
 const historyEvents = PALESTINE_HISTORY_EVENTS as HistoryEvent[];
 const villages = ATLAS_VILLAGES;
@@ -355,6 +360,54 @@ function LanguageSwitcher() {
   );
 }
 
+function InstallAppButton() {
+  const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
+  const [status, setStatus] = useState("");
+  const [installed, setInstalled] = useState(() => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as any).standalone);
+
+  useEffect(() => {
+    const onBeforeInstallPrompt = (event: Event) => {
+      event.preventDefault();
+      setPromptEvent(event as BeforeInstallPromptEvent);
+      setStatus("");
+    };
+    const onInstalled = () => {
+      setInstalled(true);
+      setPromptEvent(null);
+      setStatus("تم تثبيت التطبيق على جهازك.");
+    };
+    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  async function installApp() {
+    if (installed) {
+      setStatus("التطبيق مثبت بالفعل على هذا الجهاز.");
+      return;
+    }
+    if (promptEvent) {
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
+      setPromptEvent(null);
+      setStatus(choice.outcome === "accepted" ? "بدأ تثبيت التطبيق." : "يمكنك تثبيته لاحقا من نفس الزر.");
+      return;
+    }
+    setStatus("إذا لم تظهر نافذة التثبيت، افتح قائمة المتصفح واختر: تثبيت التطبيق أو إضافة إلى الشاشة الرئيسية.");
+  }
+
+  return (
+    <div className="install-app-panel" aria-label="تثبيت المنصة كتطبيق">
+      <button type="button" onClick={installApp}>{installed ? "التطبيق مثبت" : "تثبيت التطبيق"}</button>
+      <span>استخدم المنصة كتطبيق على الهاتف أو الكمبيوتر.</span>
+      {status && <small>{status}</small>}
+    </div>
+  );
+}
+
 function HomePage() {
   const [query, setQuery] = useState("");
   const queryText = normalize(query);
@@ -392,6 +445,7 @@ function HomePage() {
         <CommonsImage className="hero-image" queries={HERO_IMAGE_QUERIES} alt="صورة حقيقية لمدينة القدس أو مشهد من فلسطين التاريخية" placeholder="جاري تحميل صورة حقيقية من مصدر مفتوح..." />
         <div className="hero-shade" aria-hidden="true" />
         <div className="hero-content">
+          <InstallAppButton />
           <p className="kicker">أطلس تاريخي وجغرافي وسياسي</p>
           <h1 id="hero-title">فلسطين عبر العصور</h1>
           <p className="hero-copy">مدخل هادئ إلى تاريخ فلسطين ومدنها وجغرافيتها ومحطاتها الدينية والسياسية. اختر النافذة التي تريدها من البطاقات أو من القائمة العلوية.</p>
@@ -1974,4 +2028,14 @@ function App() {
   );
 }
 
+function registerAppServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {
+      // The platform still works as a normal website if service worker registration fails.
+    });
+  });
+}
+
+registerAppServiceWorker();
 createRoot(document.getElementById("root")!).render(<App />);
