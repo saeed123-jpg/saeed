@@ -16,7 +16,7 @@ import {
   HOME_THEMES
 } from "./data/home";
 import { ATLAS_FIGURES, ATLAS_VILLAGES, CITY_MAP_POINTS } from "./data/atlas-additions";
-import { getVillagesForCity } from "./data/city-villages";
+import { CITY_VILLAGES, getVillagesForCity } from "./data/city-villages";
 import type { City, CityVillage, HistoryEvent } from "./types";
 import "./styles.css";
 import "./react-overrides.css";
@@ -31,6 +31,7 @@ declare global {
 const cities = PALESTINE_CITIES as City[];
 const historyEvents = PALESTINE_HISTORY_EVENTS as HistoryEvent[];
 const villages = ATLAS_VILLAGES;
+const cityVillages = CITY_VILLAGES as CityVillage[];
 const figures = ATLAS_FIGURES;
 
 function useHashRoute() {
@@ -55,6 +56,25 @@ function normalize(value: string) {
     .replace(/ى/g, "ي")
     .replace(/ة/g, "ه")
     .trim();
+}
+
+type ReadingMode = "simple" | "detailed";
+
+function ReadingModeSwitch({ mode, setMode }: { mode: ReadingMode; setMode: (mode: ReadingMode) => void }) {
+  return (
+    <div className="reading-mode-switch" role="group" aria-label="نمط القراءة">
+      <button className={mode === "simple" ? "is-active" : ""} type="button" onClick={() => setMode("simple")}>شرح مبسط</button>
+      <button className={mode === "detailed" ? "is-active" : ""} type="button" onClick={() => setMode("detailed")}>شرح تفصيلي</button>
+    </div>
+  );
+}
+
+function sourceKindFromQueries(queries: string[]) {
+  const first = queries[0] || "";
+  if (first.startsWith("commons-file:")) return "صورة مثبتة من Wikimedia Commons";
+  if (first.startsWith("wikipedia-page:")) return "صورة صفحة مرجعية موثقة";
+  if (queries.length) return "بحث احتياطي يحتاج مراجعة دورية";
+  return "لا توجد صورة معرفة";
 }
 
 type FavoriteItem = {
@@ -153,6 +173,7 @@ function ToolsMenu() {
     { href: pathFor("map"), label: "الخريطة", text: "مدن وقرى على خريطة تفاعلية" },
     { href: pathFor("search"), label: "بحث متقدم", text: "ابحث في كل محتوى المنصة" },
     { href: pathFor("timeline"), label: "خط زمني بصري", text: "استكشف الأحداث كمحطات" },
+    { href: pathFor("image-audit"), label: "تحقق الصور", text: "راجع حالة الصور ومصادرها" },
     { href: pathFor("villages"), label: "القرى المهجرة", text: "ذاكرة القرى قبل وبعد التهجير" },
     { href: pathFor("figures"), label: "شخصيات", text: "أعلام في الثقافة والسياسة والفكر" },
     { href: pathFor("activities"), label: "أنشطة", text: "اختبارات وبطاقات مراجعة خفيفة" },
@@ -361,6 +382,7 @@ function HomePage() {
     { href: pathFor("favorites"), label: "حفظ", title: "مفضلتي", text: "احفظ مدينة أو حدثا أو قرية أو شخصية لتعود إليها بسرعة.", meta: "محلي على جهازك" },
     { href: pathFor("themes"), label: "المحاور", title: "طرق الفهم", text: "محاور الدين والجغرافيا والسياسة والمجتمع والتراث مع مصطلحات مهمة.", meta: `${HOME_THEMES.length} محاور` },
     { href: pathFor("gallery"), label: "الصور", title: "المعرض البصري", text: "صور حقيقية مفتوحة المصدر مرتبطة بالتاريخ والمدن والجغرافيا.", meta: `${HOME_GALLERY.length} صور` },
+    { href: pathFor("image-audit"), label: "تحقق", title: "سجل تحقق الصور", text: "صفحة مركزية تراجع حالة الصور ومصدر كل صورة داخل الموقع.", meta: "توثيق" },
     { href: pathFor("sources"), label: "المراجع", title: "مصادر المتابعة", text: "روابط ومراجع خارجية للتوثيق والمتابعة والقراءة الأوسع.", meta: `${HOME_SOURCES.length} مصادر` }
   ];
 
@@ -567,7 +589,9 @@ function ErasPage() {
           ))}
         </div>
         <div className="timeline" aria-live="polite">
-          {filteredEras.length ? filteredEras.map((era) => (
+          {filteredEras.length ? filteredEras.map((era) => {
+            const eraIndex = HOME_ERAS.findIndex((item) => item.title === era.title && item.period === era.period);
+            return (
             <article className="era-card" key={`${era.period}-${era.title}`}>
               <div>
                 <div className="era-time">{era.period}</div>
@@ -587,9 +611,64 @@ function ErasPage() {
                 <div className="tags">
                   {era.tags.map((tag) => <span className="tag" key={`${era.title}-${tag}`}>{tag}</span>)}
                 </div>
+                <div className="panel-actions">
+                  <a className="primary-link" href={pathFor(`era/${eraIndex}`)}>فتح صفحة العصر</a>
+                </div>
               </div>
             </article>
-          )) : <div className="empty-state">لا توجد نتائج مطابقة للبحث الحالي.</div>}
+          );}) : <div className="empty-state">لا توجد نتائج مطابقة للبحث الحالي.</div>}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function EraDetailPage({ id }: { id?: string }) {
+  const index = Number(id || 0);
+  const era = HOME_ERAS[index] || HOME_ERAS[0];
+  const [mode, setMode] = useState<ReadingMode>("simple");
+  const relatedEvents = historyEvents.filter((event) => event.category === era.category).slice(0, 6);
+  const relatedCities = cities.filter((city) => era.tags.some((tag) => normalize([city.name, city.region, city.summary, city.history, ...city.tags].join(" ")).includes(normalize(tag)))).slice(0, 6);
+
+  return (
+    <main>
+      <section className="page-hero band">
+        <div className="section-heading">
+          <p className="kicker">{era.period} · {era.type}</p>
+          <h1>{era.title}</h1>
+          <p>{era.summary}</p>
+        </div>
+        <ReadingModeSwitch mode={mode} setMode={setMode} />
+      </section>
+      <section className="era-detail band">
+        <article className="explain-panel">
+          <h2>{mode === "simple" ? "الفكرة ببساطة" : "قراءة تفصيلية"}</h2>
+          <p>{era.summary}</p>
+          {mode === "detailed" && (
+            <div className="era-points expanded">
+              {era.points.map(([label, text]) => (
+                <div className="era-point" key={`${era.title}-${label}`}>
+                  <strong>{label}</strong>
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="tags">{era.tags.map((tag) => <span className="tag" key={`${era.title}-${tag}`}>{tag}</span>)}</div>
+        </article>
+        <aside className="source-panel">
+          <h2>مصادر ومداخل متابعة</h2>
+          {HOME_SOURCES.slice(0, 5).map((source) => <a href={source.href} target="_blank" rel="noreferrer" key={source.href}>{source.label}</a>)}
+        </aside>
+      </section>
+      <section className="related-strip band">
+        <div className="section-heading">
+          <p className="kicker">روابط داخلية</p>
+          <h2>أحداث ومدن مرتبطة</h2>
+        </div>
+        <div className="related-grid">
+          {relatedEvents.map((event) => <a href={pathFor("history")} key={`${event.period}-${event.title}`}>{event.title}<span>{event.period}</span></a>)}
+          {relatedCities.map((city) => <a href={pathFor(`city/${city.id}`)} key={city.id}>{city.name}<span>{city.region}</span></a>)}
         </div>
       </section>
     </main>
@@ -645,6 +724,7 @@ function GalleryPage() {
           <h1>مشاهد من مصادر مفتوحة</h1>
           <p>هذا المعرض يعتمد على صور حقيقية من Wikimedia Commons حتى تبقى الصورة مرتبطة بالمكان أو الموضوع التاريخي الذي تعرضه.</p>
         </div>
+        <a className="primary-link" href={pathFor("image-audit")}>فتح سجل تحقق الصور</a>
       </section>
       <section className="gallery band" aria-labelledby="gallery-title">
         <div className="gallery-grid">
@@ -679,13 +759,20 @@ function SourcesPage() {
 }
 
 function MapPage() {
-  const [mode, setMode] = useState<"cities" | "villages">("cities");
+  const [layers, setLayers] = useState({
+    cities: true,
+    villages: true,
+    westbank: true,
+    inside: true,
+    gaza: true
+  });
   const [selectedKey, setSelectedKey] = useState("city-east-jerusalem");
   const cityPins = CITY_MAP_POINTS.map((point) => {
     const city = cities.find((item) => item.id === point.cityId);
     return {
       kind: "city",
       id: point.cityId,
+      category: city?.category || "westbank",
       title: city?.name || point.cityId,
       subtitle: city?.region || "مدينة فلسطينية",
       summary: `${point.note}${city?.summary ? `: ${city.summary}` : ""}`,
@@ -706,13 +793,18 @@ function MapPage() {
     y: village.y,
     tags: village.tags
   }));
-  const activePins = mode === "cities" ? cityPins : villagePins;
+  const activeCityPins = layers.cities
+    ? cityPins.filter((pin) => (pin.category === "westbank" && layers.westbank) || (pin.category === "inside" && layers.inside) || (pin.category === "gaza" && layers.gaza))
+    : [];
+  const activePins = [...activeCityPins, ...(layers.villages ? villagePins : [])];
   const selected = activePins.find((pin) => `${pin.kind}-${pin.id}` === selectedKey) || activePins[0];
-
-  useEffect(() => {
-    const first = mode === "cities" ? cityPins[0] : villagePins[0];
-    if (first) setSelectedKey(`${first.kind}-${first.id}`);
-  }, [mode]);
+  const layerToggles = [
+    ["cities", "المدن"],
+    ["westbank", "الضفة والقدس"],
+    ["inside", "الداخل"],
+    ["gaza", "قطاع غزة"],
+    ["villages", "القرى المهجرة"]
+  ] as const;
 
   return (
     <main>
@@ -725,9 +817,17 @@ function MapPage() {
       </section>
       <section className="atlas-map-layout band">
         <div className="atlas-map-shell">
-          <div className="map-controls" role="group" aria-label="نوع النقاط">
-            <button className={mode === "cities" ? "is-active" : ""} type="button" onClick={() => setMode("cities")}>مدن</button>
-            <button className={mode === "villages" ? "is-active" : ""} type="button" onClick={() => setMode("villages")}>قرى مهجرة</button>
+          <div className="map-controls layer-controls" role="group" aria-label="طبقات الخريطة">
+            {layerToggles.map(([key, label]) => (
+              <label key={key}>
+                <input
+                  type="checkbox"
+                  checked={layers[key]}
+                  onChange={() => setLayers((current) => ({ ...current, [key]: !current[key] }))}
+                />
+                <span>{label}</span>
+              </label>
+            ))}
           </div>
           <div className="atlas-map-canvas" aria-label="خريطة تفاعلية مبسطة لفلسطين">
             <svg className="atlas-map-graphic" viewBox="0 0 100 100" role="img" aria-labelledby="map-title map-desc">
@@ -865,14 +965,14 @@ function AdvancedSearchPage() {
         href: pathFor("history"),
         tags: event.tags
       })),
-      ...HOME_ERAS.map((era) => ({
+      ...HOME_ERAS.map((era, index) => ({
         id: `${era.period}-${era.title}`,
         type: "era",
         typeLabel: "عصر",
         title: era.title,
         subtitle: era.period,
         body: era.summary,
-        href: pathFor("eras"),
+        href: pathFor(`era/${index}`),
         tags: era.tags
       })),
       ...HOME_RESEARCH_DOSSIERS.map((dossier) => ({
@@ -895,6 +995,16 @@ function AdvancedSearchPage() {
         href: pathFor("villages"),
         tags: village.tags
       })),
+      ...cityVillages.map((village) => ({
+        id: village.id,
+        type: "cityVillage",
+        typeLabel: "قرية/بلدة ضمن مدينة",
+        title: village.name,
+        subtitle: village.district,
+        body: village.summary,
+        href: pathFor(`city/${village.cityId}`),
+        tags: village.tags
+      })),
       ...figures.map((figure) => ({
         id: figure.id,
         type: "figure",
@@ -914,6 +1024,26 @@ function AdvancedSearchPage() {
         body: definition,
         href: pathFor("themes"),
         tags: ["مصطلحات"]
+      })),
+      ...HOME_SOURCES.map((source) => ({
+        id: source.href,
+        type: "source",
+        typeLabel: "مصدر",
+        title: source.label,
+        subtitle: "مرجع خارجي",
+        body: source.href,
+        href: source.href,
+        tags: ["مصادر", "توثيق"]
+      })),
+      ...buildImageAuditRecords().map((record) => ({
+        id: record.id,
+        type: "image",
+        typeLabel: "صورة",
+        title: record.title,
+        subtitle: record.section,
+        body: `${record.subject} · ${record.status} · ${record.primary}`,
+        href: pathFor("image-audit"),
+        tags: ["صور", "تحقق", record.section]
       }))
     ];
     return allResults
@@ -943,8 +1073,11 @@ function AdvancedSearchPage() {
             <option value="era">عصور</option>
             <option value="dossier">ملفات</option>
             <option value="village">قرى مهجرة</option>
+            <option value="cityVillage">قرى المدن</option>
             <option value="figure">شخصيات</option>
             <option value="glossary">مصطلحات</option>
+            <option value="source">مصادر</option>
+            <option value="image">صور</option>
           </select>
         </form>
         <div className="advanced-result-grid">
@@ -1037,6 +1170,118 @@ const FIGURE_IMAGES: Record<string, { title: string; caption: string }> = {
   "abd-al-qader-husseini": { title: "Husseini Abd Al Qader1.jpg", caption: "صورة أرشيفية لعبد القادر الحسيني." },
   "hanan-ashrawi": { title: "Hanan Ashrawi in August 2013.jpg", caption: "صورة حقيقية لحنان عشراوي عام 2013." }
 };
+
+type ImageAuditRecord = {
+  id: string;
+  section: string;
+  subject: string;
+  title: string;
+  status: string;
+  primary: string;
+  source?: string;
+  href?: string;
+};
+
+function sourceFromPrimary(primary: string, fallback?: string) {
+  if (primary.startsWith("commons-file:")) return commonsFilePage(primary.slice("commons-file:".length).trim());
+  if (primary.startsWith("wikipedia-page:")) return `https://en.wikipedia.org/wiki/${encodeURIComponent(primary.slice("wikipedia-page:".length).trim().replaceAll(" ", "_"))}`;
+  return fallback;
+}
+
+function buildImageAuditRecords(): ImageAuditRecord[] {
+  const records: ImageAuditRecord[] = [];
+  const addRecord = (record: Omit<ImageAuditRecord, "status"> & { queries?: string[]; direct?: boolean }) => {
+    const primary = record.primary || record.queries?.[0] || "";
+    const status = record.direct ? "مثبتة برابط مباشر" : sourceKindFromQueries(record.queries || [primary]);
+    records.push({ ...record, primary, status, source: sourceFromPrimary(primary, record.source) });
+  };
+
+  HOME_GALLERY.forEach((image, index) => addRecord({
+    id: `gallery-${index}`,
+    section: "المعرض",
+    subject: image.caption,
+    title: image.alt,
+    primary: image.src,
+    source: image.source,
+    direct: true,
+    href: pathFor("gallery")
+  }));
+  cities.forEach((city) => {
+    addRecord({ id: `city-modern-${city.id}`, section: "المدن", subject: city.name, title: "الصورة الأساسية/الحديثة", primary: city.modernImageSearch[0], queries: city.modernImageSearch, href: pathFor(`city/${city.id}`) });
+    addRecord({ id: `city-old-${city.id}`, section: "المدن", subject: city.name, title: "الصورة القديمة", primary: city.oldImageSearch[0], queries: city.oldImageSearch, href: pathFor(`city/${city.id}`) });
+  });
+  historyEvents.forEach((event) => addRecord({ id: `history-${event.period}-${event.title}`, section: "الأحداث", subject: event.title, title: event.period, primary: event.imageQueries[0], queries: event.imageQueries, href: pathFor("history") }));
+  villages.forEach((village: any) => addRecord({ id: `village-${village.id}`, section: "القرى المهجرة", subject: village.name, title: village.district, primary: village.imageQueries[0], queries: village.imageQueries, href: pathFor("villages") }));
+  cityVillages.forEach((village) => addRecord({ id: `city-village-${village.id}`, section: "قرى المدن", subject: village.name, title: village.district, primary: village.imageQueries[0], queries: village.imageQueries, href: pathFor(`city/${village.cityId}`) }));
+  figures.forEach((figure: any) => {
+    const image = FIGURE_IMAGES[figure.id];
+    addRecord({
+      id: `figure-${figure.id}`,
+      section: "الشخصيات",
+      subject: figure.name,
+      title: image ? image.caption : "لا توجد صورة مؤكدة",
+      primary: image ? `commons-file:${image.title}` : "",
+      source: image ? commonsFilePage(image.title) : figure.sourceHref,
+      queries: image ? [`commons-file:${image.title}`] : []
+    });
+  });
+  return records;
+}
+
+function ImageAuditPage() {
+  const [section, setSection] = useState("all");
+  const [query, setQuery] = useState("");
+  const records = buildImageAuditRecords();
+  const sections = ["all", ...Array.from(new Set(records.map((record) => record.section)))];
+  const filtered = records.filter((record) => {
+    const sectionMatch = section === "all" || record.section === section;
+    const queryMatch = normalize([record.subject, record.title, record.status, record.primary, record.section].join(" ")).includes(normalize(query));
+    return sectionMatch && queryMatch;
+  });
+  const verifiedCount = records.filter((record) => record.status.includes("مثبتة") || record.status.includes("مرجعية")).length;
+
+  return (
+    <main>
+      <section className="page-hero band">
+        <div className="section-heading">
+          <p className="kicker">ثقة وتوثيق</p>
+          <h1>سجل تحقق الصور</h1>
+          <p>صفحة مركزية تراجع الصور المستخدمة في المدن والأحداث والقرى والشخصيات، وتوضح هل مصدر الصورة مثبت أم آت من صفحة مرجعية أم بحث احتياطي يحتاج متابعة.</p>
+        </div>
+      </section>
+      <section className="image-audit band">
+        <div className="audit-summary">
+          <article><strong>{records.length}</strong><span>سجل صورة</span></article>
+          <article><strong>{verifiedCount}</strong><span>مصدر مثبت أو مرجعي</span></article>
+          <article><strong>{records.length - verifiedCount}</strong><span>بحاجة مراجعة دورية</span></article>
+        </div>
+        <form className="advanced-search-controls audit-controls" onSubmit={(event) => event.preventDefault()}>
+          <label htmlFor="audit-search">بحث في سجل الصور</label>
+          <input id="audit-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="اكتب مدينة، حدثا، أو حالة مصدر..." />
+          <label htmlFor="audit-section">القسم</label>
+          <select id="audit-section" value={section} onChange={(event) => setSection(event.target.value)}>
+            {sections.map((item) => <option value={item} key={item}>{item === "all" ? "كل الأقسام" : item}</option>)}
+          </select>
+        </form>
+        <div className="audit-grid">
+          {filtered.map((record) => (
+            <article className="audit-card" key={record.id}>
+              <span>{record.section}</span>
+              <h3>{record.subject}</h3>
+              <p>{record.title}</p>
+              <strong>{record.status}</strong>
+              <code>{record.primary || "لا توجد صورة مؤكدة"}</code>
+              <div className="panel-actions">
+                {record.source && <a href={record.source} target="_blank" rel="noreferrer">مصدر الصورة</a>}
+                {record.href && <a href={record.href}>فتح الصفحة</a>}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
 
 function commonsFileUrl(title: string, width = 900) {
   return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(title)}?width=${width}`;
@@ -1355,6 +1600,7 @@ function CityPage({ id }: { id?: string }) {
   const group: any = CITY_GROUPS[city.category];
   const related = cities.filter((item) => item.category === city.category && item.id !== city.id).slice(0, 6);
   const cityVillages = getVillagesForCity(city.id);
+  const [mode, setMode] = useState<ReadingMode>("simple");
 
   return (
     <main>
@@ -1365,6 +1611,7 @@ function CityPage({ id }: { id?: string }) {
           <p className="kicker">{group.shortLabel} · {city.region}</p>
           <h1>{city.name}</h1>
           <p>{city.summary}</p>
+          <ReadingModeSwitch mode={mode} setMode={setMode} />
         </div>
       </section>
       <CityOverviewPanel city={city} />
@@ -1378,24 +1625,54 @@ function CityPage({ id }: { id?: string }) {
           <FavoriteButton item={{ id: city.id, type: "city", title: city.name, subtitle: city.region, href: pathFor(`city/${city.id}`) }} />
         </aside>
         <article className="city-story">
-          <h2>شرح تفصيلي</h2>
+          <h2>{mode === "simple" ? "شرح مبسط" : "شرح تفصيلي"}</h2>
           <p>{city.summary}</p>
-          <h3>التاريخ والتحولات</h3><p>{city.history}</p>
-          <h3>السياسة والهوية</h3><p>{buildPoliticalText(city)}</p>
-          <h3>الجغرافيا والموقع</h3><p>{city.geography}</p>
-          <h3>بماذا تشتهر المدينة؟</h3><p>تشتهر {city.name} بـ {city.highlights.join("، ")}.</p>
-          <h3>المدينة اليوم</h3><p>{city.today}</p>
+          {mode === "detailed" ? (
+            <>
+              <h3>التاريخ والتحولات</h3><p>{city.history}</p>
+              <h3>السياسة والهوية</h3><p>{buildPoliticalText(city)}</p>
+              <h3>الجغرافيا والموقع</h3><p>{city.geography}</p>
+              <h3>بماذا تشتهر المدينة؟</h3><p>تشتهر {city.name} بـ {city.highlights.join("، ")}.</p>
+              <h3>المدينة اليوم</h3><p>{city.today}</p>
+            </>
+          ) : (
+            <div className="simple-reading-box">
+              <p>{city.name} تقع في {city.region}. أهم ما يساعد على فهمها: {city.highlights.slice(0, 3).join("، ")}.</p>
+              <p>{buildPoliticalText(city)}</p>
+            </div>
+          )}
           <h3>ملامح بارزة</h3>
           <ul className="feature-list">{city.highlights.map((item) => <li key={item}>{item}</li>)}</ul>
         </article>
       </section>
       <CityVillagesSection city={city} villages={cityVillages} />
       <CityImages city={city} />
+      <CitySourcesPanel city={city} villages={cityVillages} />
       <section className="related-cities band">
         <div className="section-heading"><p className="kicker">مدن ذات صلة</p><h2>من نفس التصنيف</h2></div>
         <div className="related-grid">{related.map((item) => <a href={pathFor(`city/${item.id}`)} key={item.id}>{item.name}<span>{item.region}</span></a>)}</div>
       </section>
     </main>
+  );
+}
+
+function CitySourcesPanel({ city, villages }: { city: City; villages: CityVillage[] }) {
+  const sources = [
+    { label: `صفحة ${city.name} المرجعية`, href: city.realSource },
+    { label: "Wikimedia Commons للصور المفتوحة", href: "https://commons.wikimedia.org/" },
+    ...Array.from(new Set(villages.map((village) => village.sourceHref))).slice(0, 4).map((href, index) => ({ label: `مصدر قرى النطاق ${index + 1}`, href }))
+  ];
+  return (
+    <section className="city-sources band">
+      <div className="section-heading">
+        <p className="kicker">مصادر الصفحة</p>
+        <h2>توثيق {city.name}</h2>
+        <p>روابط تساعد على مراجعة نص المدينة وصورها وقراها المرتبطة.</p>
+      </div>
+      <div className="source-list compact">
+        {sources.map((source) => <a href={source.href} target="_blank" rel="noreferrer" key={source.href}>{source.label}</a>)}
+      </div>
+    </section>
   );
 }
 
@@ -1605,6 +1882,7 @@ function BeforeAfterCompare({ oldImage, modernImage, cityName }: { oldImage: any
 function HistoryPage() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
+  const [mode, setMode] = useState<ReadingMode>("simple");
   const filtered = historyEvents.filter((event) => {
     const categoryMatch = filter === "all" || event.category === filter;
     const queryMatch = normalize([event.period, event.title, event.summary, ...event.details, ...event.tags].join(" ")).includes(normalize(query));
@@ -1619,6 +1897,7 @@ function HistoryPage() {
           <h1>الموسوعة التاريخية لفلسطين</h1>
           <p>خط موسوعي واسع يجمع العصور القديمة، الاحتلالات، الحروب، المدن، النكبة، 1967، الانتفاضات، أوسلو، غزة، وطوفان الأقصى وما بعده.</p>
         </div>
+        <ReadingModeSwitch mode={mode} setMode={setMode} />
         <form className="history-search"><label htmlFor="history-search">بحث في الأحداث</label><input id="history-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ابحث عن حدث..." /></form>
       </section>
       <section className="history-overview band">
@@ -1633,13 +1912,13 @@ function HistoryPage() {
           <button className={`filter-btn ${filter === "all" ? "is-active" : ""}`} onClick={() => setFilter("all")}>كل الموسوعة</button>
           {Object.entries(HISTORY_GROUPS).map(([key, label]: any) => <button key={key} className={`filter-btn ${filter === key ? "is-active" : ""}`} onClick={() => setFilter(key)}>{label}</button>)}
         </div>
-        <div className="history-grid">{filtered.map((event) => <HistoryCard event={event} key={`${event.period}-${event.title}`} />)}</div>
+        <div className="history-grid">{filtered.map((event) => <HistoryCard event={event} mode={mode} key={`${event.period}-${event.title}`} />)}</div>
       </section>
     </main>
   );
 }
 
-function HistoryCard({ event }: { event: HistoryEvent }) {
+function HistoryCard({ event, mode }: { event: HistoryEvent; mode: ReadingMode }) {
   const [image, setImage] = useState<any>(null);
   useEffect(() => { setImage(null); fetchCommonsImage(event.imageQueries).then(setImage); }, [event.title]);
   return (
@@ -1651,7 +1930,7 @@ function HistoryCard({ event }: { event: HistoryEvent }) {
         <div className="history-card-meta"><span>{event.period}</span><span>{(HISTORY_GROUPS as any)[event.category]}</span></div>
         <h3>{event.title}</h3>
         <p>{event.summary}</p>
-        <div className="history-detail-list">{event.details.map((detail) => <p key={detail}>{detail}</p>)}</div>
+        {mode === "detailed" && <div className="history-detail-list">{event.details.map((detail) => <p key={detail}>{detail}</p>)}</div>}
         <div className="tags">{event.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
         <div className="panel-actions">
           <a className="history-source" href={event.source} target="_blank" rel="noreferrer">فتح المرجع</a>
@@ -1669,11 +1948,13 @@ function App() {
     if (page === "cities") return <CitiesPage />;
     if (page === "city") return <CityPage id={route[1]} />;
     if (page === "eras") return <ErasPage />;
+    if (page === "era") return <EraDetailPage id={route[1]} />;
     if (page === "history") return <HistoryPage />;
     if (page === "dossiers") return <DossiersPage />;
     if (page === "map") return <MapPage />;
     if (page === "search") return <AdvancedSearchPage />;
     if (page === "timeline") return <VisualTimelinePage />;
+    if (page === "image-audit") return <ImageAuditPage />;
     if (page === "villages") return <VillagesPage />;
     if (page === "figures") return <FiguresPage />;
     if (page === "activities") return <ActivitiesPage />;

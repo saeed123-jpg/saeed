@@ -2278,6 +2278,91 @@ figcaption {
   color: #111715;
 }
 
+.reading-mode-switch {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.page-hero .reading-mode-switch {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.reading-mode-switch button {
+  min-height: 38px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.reading-mode-switch button.is-active {
+  border-color: var(--olive);
+  background: var(--olive);
+  color: #fff;
+}
+
+.simple-reading-box,
+.explain-panel,
+.source-panel,
+.audit-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: 0 16px 34px rgba(24, 32, 30, 0.07);
+}
+
+.simple-reading-box {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 16px;
+  background: #f7f4ee;
+}
+
+.era-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 360px);
+  gap: 22px;
+  background: #eef2ef;
+}
+
+.explain-panel,
+.source-panel {
+  padding: 24px;
+}
+
+.source-panel {
+  align-self: start;
+  position: sticky;
+  top: 94px;
+  display: grid;
+  gap: 10px;
+}
+
+.source-panel a,
+.source-list.compact a {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+  color: var(--sea);
+  font-weight: 900;
+}
+
+.city-sources {
+  background: #eef2ef;
+}
+
 .atlas-map-layout {
   display: grid;
   grid-template-columns: minmax(320px, 1.35fr) minmax(260px, 0.65fr);
@@ -2323,6 +2408,24 @@ figcaption {
   border-color: var(--olive);
   background: var(--olive);
   color: #fff;
+}
+
+.layer-controls label {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.layer-controls input {
+  accent-color: var(--olive);
 }
 
 .atlas-map-canvas {
@@ -2645,6 +2748,72 @@ figcaption {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.image-audit {
+  background: var(--paper);
+}
+
+.audit-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+.audit-summary article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px;
+  background: var(--surface);
+  box-shadow: 0 16px 34px rgba(24, 32, 30, 0.07);
+}
+
+.audit-summary strong {
+  display: block;
+  color: var(--olive-dark);
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 1;
+}
+
+.audit-summary span {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.audit-controls {
+  position: static;
+  grid-template-columns: minmax(170px, 220px) minmax(260px, 1fr) minmax(120px, 180px) minmax(180px, 260px);
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.audit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.audit-card {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  min-width: 0;
+}
+
+.audit-card > span {
+  color: var(--clay);
+  font-weight: 900;
+}
+
+.audit-card code {
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+  padding: 10px;
+  background: #eef2ef;
+  color: #31403a;
+  direction: ltr;
+  text-align: left;
+}
+
 .advanced-result-card,
 .favorite-card {
   min-height: 250px;
@@ -2906,6 +3075,8 @@ figcaption {
   .dossier-grid,
   .heritage-grid,
   .quick-result-grid,
+  .audit-summary,
+  .audit-grid,
   .city-village-grid,
   .theme-grid,
   .milestone-grid,
@@ -2924,7 +3095,9 @@ figcaption {
   .city-menu-groups,
   .city-index-group,
   .city-detail,
+  .era-detail,
   .city-village-toolbar,
+  .audit-controls,
   .city-media-grid,
   .city-pager {
     grid-template-columns: 1fr;
@@ -3070,6 +3243,9 @@ figcaption {
   .dossier-grid,
   .heritage-grid,
   .quick-result-grid,
+  .audit-summary,
+  .audit-grid,
+  .audit-controls,
   .theme-grid,
   .milestone-grid,
   .glossary-grid,
@@ -3084,6 +3260,10 @@ figcaption {
   .feature-list,
   .related-grid {
     grid-template-columns: 1fr;
+  }
+
+  .source-panel {
+    position: static;
   }
 
   .city-index-group-head,
