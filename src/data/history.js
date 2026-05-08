@@ -303,7 +303,11 @@ export const PALESTINE_HISTORY_EVENTS = [
       "تستخدم المنصة الاسم كما يرد في الخطاب الفلسطيني والفصائلي، لكنها تعرض الحدث بوصفه بداية حرب كبرى ذات آثار إنسانية وسياسية هائلة على الفلسطينيين والإسرائيليين.",
       "تبع الهجوم قصف إسرائيلي واسع وحصار مشدد وعمليات برية ونزوح جماعي داخل قطاع غزة."
     ],
-    imageQueries: ["Gaza war 2023 October damage", "2023 Israel Hamas war Gaza damage"],
+    imageQueries: [
+      "commons-file:Aerial view of destruction in Beach refugee camp, Gaza Strip.jpg",
+      "Gaza war 2023 October damage",
+      "2023 Israel Hamas war Gaza damage"
+    ],
     source: "https://www.ungeneva.org/en/news-media/news/2025/10/111469/two-years-gaza-israel-war-bring-indescribable-pain-warn-aid-agencies",
     tags: ["7 أكتوبر", "طوفان الأقصى", "غزة", "رهائن"]
   },
@@ -355,7 +359,11 @@ export const PALESTINE_HISTORY_EVENTS = [
       "تقارير الأمم المتحدة والمنظمات الإنسانية ركزت على الغذاء والمياه والصحة والنزوح وحماية المدنيين، وعلى صعوبة إيصال المساعدات.",
       "في الضفة الغربية أيضا تصاعدت الحواجز والاقتحامات وعنف المستوطنين، ما جعل الأزمة لا تقتصر على غزة."
     ],
-    imageQueries: ["Gaza destruction 2024", "Gaza humanitarian aid 2024"],
+    imageQueries: [
+      "commons-file:Aerial view of destruction in Beach refugee camp, Gaza Strip.jpg",
+      "Gaza destruction 2024",
+      "Gaza humanitarian aid 2024"
+    ],
     source: "https://www.ochaopt.org/",
     tags: ["دمار", "مساعدات", "صحة", "تعليم"]
   },
@@ -381,7 +389,11 @@ export const PALESTINE_HISTORY_EVENTS = [
       "تقرير OCHA في 23 أبريل 2026 أشار إلى استمرار العنف والقيود واحتياجات الحماية والمساعدات، وإلى تدهور الوضع في الضفة الغربية أيضا.",
       "تقييم الأضرار والاحتياجات السريع لغزة لعام 2026، الصادر عن البنك الدولي والاتحاد الأوروبي والأمم المتحدة، وضع إعادة الإعمار في إطار طويل ومعقد يحتاج تمويلا واستقرارا وحوكمة."
     ],
-    imageQueries: ["Gaza 2026 humanitarian situation", "Gaza reconstruction damage 2026"],
+    imageQueries: [
+      "commons-file:Aerial view of destruction in Beach refugee camp, Gaza Strip.jpg",
+      "Gaza Strip destruction Beach refugee camp",
+      "Damage in the Gaza Strip during the Israel-Hamas war"
+    ],
     source: "https://www.ochaopt.org/content/humanitarian-situation-report-23-april-2026",
     tags: ["2026", "إعادة إعمار", "OCHA", "احتياجات"]
   },
@@ -394,7 +406,11 @@ export const PALESTINE_HISTORY_EVENTS = [
       "يغطي التقييم قطاعات السكن، الصحة، التعليم، المياه، الطاقة، النقل، الاقتصاد، والحماية الاجتماعية.",
       "أهمية التقرير أنه يحول الدمار إلى خريطة احتياجات عملية، لكنه لا يحل وحده سؤال السيطرة والمعابر والتمويل وعودة النازحين."
     ],
-    imageQueries: ["Gaza reconstruction rubble", "Gaza damage assessment"],
+    imageQueries: [
+      "commons-file:Aerial view of destruction in Beach refugee camp, Gaza Strip.jpg",
+      "Gaza Strip destruction Beach refugee camp",
+      "Damage in the Gaza Strip during the Israel-Hamas war"
+    ],
     source: "https://www.un.org/unispal/document/report-gaza-strip-rapid-damage-20apr26/",
     tags: ["تقييم أضرار", "غزة", "إعمار", "2026"]
   },

@@ -1362,9 +1362,14 @@ function commonsSearchUrl(query: string) {
 }
 
 async function fetchCommonsImage(queries: string[]) {
-  const badTitlePattern = /\b(map|maps|locator|location|flag|seal|coat|logo|diagram|chart|svg|icon|symbol|emblem|route|westbank|claimed|district|blank|osm|openstreetmap)\b/i;
+  const exactPrefix = "commons-file:";
+  const badTitlePattern = /\b(map|maps|locator|location|flag|seal|coat|logo|diagram|chart|svg|icon|symbol|emblem|route|westbank|claimed|district|blank|osm|openstreetmap|pdf|djvu|gazetteer|index|access|restriction|restrictions|page1|book|atlas|survey|dictionary|bible|bregvadze|reim|takuma|moshav|kibbutz|nova|memorial|gazaenv|gaza envelope|car wall|route 232|sderot|beeri|kfar aza|nir oz|netiv haasara)\b/i;
   const strongPhotoPattern = /\b(street|old city|old|view|panorama|skyline|market|mosque|church|port|harbou?r|beach|camp|tower|hotel|city|landscape|aerial|quarter|center|centre|building|directorate|ruins|tell|monastery|khan|sea|coast|square|neighbou?rhood|alley)\b/i;
   for (const query of queries) {
+    if (query.startsWith(exactPrefix)) {
+      const title = query.slice(exactPrefix.length).trim();
+      if (title) return { src: commonsFileUrl(title, 1280), source: commonsFilePage(title), title };
+    }
     try {
       const response = await fetch(commonsSearchUrl(query));
       if (!response.ok) continue;
@@ -1374,7 +1379,9 @@ async function fetchCommonsImage(queries: string[]) {
         .map((page) => ({ title: page.title || "", info: page.imageinfo?.[0] }))
         .filter(({ title, info }) => {
           const url = (info?.thumburl || info?.url || "").split("?")[0];
-          return /\.(jpe?g|png|webp)$/i.test(url) && !badTitlePattern.test(title);
+          const descriptionUrl = info?.descriptionurl || "";
+          const haystack = `${title} ${url} ${descriptionUrl}`;
+          return /\.(jpe?g|png|webp)$/i.test(url) && !badTitlePattern.test(haystack);
         })
         .sort((a, b) => Number(strongPhotoPattern.test(b.title)) - Number(strongPhotoPattern.test(a.title)));
       const match = matches[0];
