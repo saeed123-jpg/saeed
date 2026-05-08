@@ -673,15 +673,22 @@ export const PALESTINE_CITIES = [
   const legacyCategory = city.category;
   const category = city.category === "depopulated" ? "inside" : city.category;
   const citySearchName = city.wikiTitle.replaceAll("_", " ");
+  const verifiedModernImages = city.id === "tubas" ? ["commons-file:Tubas - panoramio.jpg"] : [];
+  const modernFallbacks = [
+    `wikipedia-page:${city.wikiTitle}`,
+    `${citySearchName} Palestine`,
+    `${citySearchName} city Palestine`,
+    `${citySearchName} old city`,
+    `${citySearchName} skyline`
+  ];
   return {
+    ...city,
     realImage: `assets/images/real-cities/${city.id}.jpg`,
     realSource: `https://en.wikipedia.org/wiki/${encodeURIComponent(city.wikiTitle.replaceAll(" ", "_"))}`,
-    oldImageSearch: city.oldImageSearch || [`${citySearchName} old`, `${citySearchName} 1900`, `${citySearchName} Palestine historic`],
-    modernImageSearch: city.modernImageSearch || [`${citySearchName} city`, `${citySearchName} skyline`, `${citySearchName} Palestine`],
+    oldImageSearch: city.oldImageSearch || [`${citySearchName} Palestine historic`, `${citySearchName} old Palestine`, `${citySearchName} 1900 Palestine`, `wikipedia-page:${city.wikiTitle}`],
+    modernImageSearch: [...verifiedModernImages, ...(city.modernImageSearch ? [`wikipedia-page:${city.wikiTitle}`, ...city.modernImageSearch, `${citySearchName} Palestine`] : modernFallbacks)],
     political: city.political,
     legacyCategory,
-    ...city,
     category
   };
 });
-

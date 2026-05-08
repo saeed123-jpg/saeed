@@ -1046,6 +1046,39 @@ function commonsFilePage(title: string) {
   return `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(title).replace(/%20/g, "_")}`;
 }
 
+function wikipediaPageImageUrl(title: string) {
+  return "https://en.wikipedia.org/w/api.php?" + new URLSearchParams({
+    origin: "*",
+    action: "query",
+    format: "json",
+    prop: "pageimages",
+    piprop: "thumbnail|original|name",
+    pithumbsize: "1280",
+    redirects: "1",
+    titles: title
+  });
+}
+
+async function fetchWikipediaPageImage(title: string, badTitlePattern: RegExp) {
+  try {
+    const response = await fetch(wikipediaPageImageUrl(title));
+    if (!response.ok) return null;
+    const data = await response.json();
+    const page = (Object.values(data.query?.pages || {}) as any[])[0];
+    const src = page?.thumbnail?.source || page?.original?.source || "";
+    const fileTitle = page?.pageimage || title;
+    const haystack = `${fileTitle} ${src}`;
+    if (!/\.(jpe?g|png|webp)$/i.test(src.split("?")[0]) || badTitlePattern.test(haystack)) return null;
+    return {
+      src,
+      source: `https://en.wikipedia.org/wiki/${encodeURIComponent((page?.title || title).replaceAll(" ", "_"))}`,
+      title: fileTitle
+    };
+  } catch {
+    return null;
+  }
+}
+
 function VerifiedFigureImage({ figure }: { figure: any }) {
   const image = FIGURE_IMAGES[figure.id];
   if (!image) {
@@ -1429,12 +1462,19 @@ function commonsSearchUrl(query: string) {
 
 async function fetchCommonsImage(queries: string[]) {
   const exactPrefix = "commons-file:";
-  const badTitlePattern = /\b(map|maps|locator|location|flag|seal|coat|logo|diagram|chart|svg|icon|symbol|emblem|route|westbank|claimed|district|blank|osm|openstreetmap|pdf|djvu|gazetteer|index|access|restriction|restrictions|page1|book|atlas|survey|dictionary|bible|bregvadze|reim|takuma|moshav|kibbutz|nova|memorial|gazaenv|gaza envelope|car wall|route 232|sderot|beeri|kfar aza|nir oz|netiv haasara)\b/i;
+  const wikipediaPrefix = "wikipedia-page:";
+  const badTitlePattern = /\b(map|maps|locator|location|flag|seal|coat|logo|diagram|chart|svg|icon|symbol|emblem|route|westbank|claimed|district|blank|osm|openstreetmap|pdf|djvu|gazetteer|index|access|restriction|restrictions|page1|book|atlas|survey|dictionary|bible|bregvadze|reim|takuma|moshav|kibbutz|nova|memorial|gazaenv|gaza envelope|car wall|route 232|sderot|beeri|kfar aza|nir oz|netiv haasara|settlement|outpost|tuba city|arizona|coconino|moenave|hopi|navajo|reservation|coal mine canyon|dinosaur tracks)\b/i;
   const strongPhotoPattern = /\b(street|old city|old|view|panorama|skyline|market|mosque|church|port|harbou?r|beach|camp|tower|hotel|city|landscape|aerial|quarter|center|centre|building|directorate|ruins|tell|monastery|khan|sea|coast|square|neighbou?rhood|alley)\b/i;
   for (const query of queries) {
     if (query.startsWith(exactPrefix)) {
       const title = query.slice(exactPrefix.length).trim();
       if (title) return { src: commonsFileUrl(title, 1280), source: commonsFilePage(title), title };
+    }
+    if (query.startsWith(wikipediaPrefix)) {
+      const title = query.slice(wikipediaPrefix.length).trim();
+      const image = title ? await fetchWikipediaPageImage(title, badTitlePattern) : null;
+      if (image) return image;
+      continue;
     }
     try {
       const response = await fetch(commonsSearchUrl(query));
