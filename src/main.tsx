@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { Capacitor } from "@capacitor/core";
 import { CITY_GROUPS, PALESTINE_CITIES } from "./data/cities.js";
 import { HISTORY_GROUPS, PALESTINE_HISTORY_EVENTS } from "./data/history.js";
 import {
@@ -25,6 +26,10 @@ declare global {
   interface Window {
     googleTranslateElementInit?: () => void;
     google?: any;
+    Capacitor?: {
+      isNativePlatform?: () => boolean;
+      getPlatform?: () => string;
+    };
   }
 }
 
@@ -34,6 +39,14 @@ const villages = ATLAS_VILLAGES;
 const cityVillages = CITY_VILLAGES as CityVillage[];
 const figures = ATLAS_FIGURES;
 const APK_DOWNLOAD_URL = "/downloads/atlas-palestine.apk";
+
+function isRunningInNativeApp() {
+  if (Capacitor.isNativePlatform()) return true;
+  const capacitor = window.Capacitor;
+  if (capacitor?.isNativePlatform?.()) return true;
+  const platform = capacitor?.getPlatform?.();
+  return platform === "android" || platform === "ios";
+}
 
 function useHashRoute() {
   const [hash, setHash] = useState(() => window.location.hash || "#/");
@@ -170,10 +183,11 @@ function Header() {
 function ToolsMenu() {
   const [open, setOpen] = useState(false);
   const [suppressHover, setSuppressHover] = useState(false);
+  const showInstallAction = !isRunningInNativeApp();
   const tools = [
     { href: pathFor("map"), label: "الخريطة", text: "مدن وقرى على خريطة تفاعلية" },
     { href: pathFor("search"), label: "بحث متقدم", text: "ابحث في كل محتوى المنصة" },
-    { href: APK_DOWNLOAD_URL, label: "تثبيت التطبيق", text: "تحميل APK للهاتف مباشرة", download: "atlas-palestine.apk" },
+    ...(showInstallAction ? [{ href: APK_DOWNLOAD_URL, label: "تثبيت التطبيق", text: "تحميل APK للهاتف مباشرة", download: "atlas-palestine.apk" }] : []),
     { href: pathFor("timeline"), label: "خط زمني بصري", text: "استكشف الأحداث كمحطات" },
     { href: pathFor("image-audit"), label: "تحقق الصور", text: "راجع حالة الصور ومصادرها" },
     { href: pathFor("villages"), label: "القرى المهجرة", text: "ذاكرة القرى قبل وبعد التهجير" },
@@ -369,6 +383,7 @@ function DownloadAppsPanel() {
 
 function HomePage() {
   const [query, setQuery] = useState("");
+  const showInstallAction = !isRunningInNativeApp();
   const queryText = normalize(query);
   const cityResults = queryText
     ? cities.filter((city) => normalize([city.name, city.region, city.summary, city.history, ...city.tags].join(" ")).includes(queryText)).slice(0, 4)
@@ -388,7 +403,7 @@ function HomePage() {
     { href: pathFor("map"), label: "الخريطة", title: "خريطة تفاعلية", text: "نقاط للمدن والقرى المهجرة تساعد القارئ على ربط المكان بالذاكرة.", meta: `${CITY_MAP_POINTS.length + villages.length} نقطة` },
     { href: pathFor("search"), label: "بحث", title: "بحث متقدم", text: "محرك واحد للمدن والأحداث والعصور والقرى والشخصيات والمصطلحات.", meta: "كل المحتوى" },
     { href: pathFor("timeline"), label: "زمني", title: "خط زمني بصري", text: "قراءة الأحداث كمحطات قابلة للاختيار بدل قائمة طويلة فقط.", meta: `${historyEvents.length} محطة` },
-    { href: APK_DOWNLOAD_URL, label: "تطبيق", title: "تثبيت التطبيق", text: "حمّل ملف APK الحقيقي للهاتف وثبته مباشرة من جهازك.", meta: "APK" },
+    ...(showInstallAction ? [{ href: APK_DOWNLOAD_URL, label: "تطبيق", title: "تثبيت التطبيق", text: "حمّل ملف APK الحقيقي للهاتف وثبته مباشرة من جهازك.", meta: "APK" }] : []),
     { href: pathFor("villages"), label: "قرى", title: "القرى المهجرة", text: "صفحة مستقلة لذاكرة القرى، قبل التهجير وبعده، مع صور حقيقية.", meta: `${villages.length} قرية` },
     { href: pathFor("figures"), label: "أعلام", title: "شخصيات وأعلام", text: "مدخل إلى شخصيات فلسطينية في الأدب والفكر والسياسة والعمل الوطني.", meta: `${figures.length} شخصية` },
     { href: pathFor("activities"), label: "أنشطة", title: "أنشطة ومراجعة", text: "اختبار قصير وبطاقات مراجعة وتحدي ترتيب زمني دون تحويل الموقع إلى منصة تعليمية كاملة.", meta: `${HOME_QUIZ.length} أسئلة` },
@@ -405,7 +420,7 @@ function HomePage() {
         <CommonsImage className="hero-image" queries={HERO_IMAGE_QUERIES} alt="صورة حقيقية لمدينة القدس أو مشهد من فلسطين التاريخية" placeholder="جاري تحميل صورة حقيقية من مصدر مفتوح..." />
         <div className="hero-shade" aria-hidden="true" />
         <div className="hero-content">
-          <DownloadAppsPanel />
+          {showInstallAction && <DownloadAppsPanel />}
           <p className="kicker">أطلس تاريخي وجغرافي وسياسي</p>
           <h1 id="hero-title">فلسطين عبر العصور</h1>
           <p className="hero-copy">مدخل هادئ إلى تاريخ فلسطين ومدنها وجغرافيتها ومحطاتها الدينية والسياسية. اختر النافذة التي تريدها من البطاقات أو من القائمة العلوية.</p>
@@ -773,6 +788,20 @@ function SourcesPage() {
 }
 
 function DownloadsPage() {
+  if (isRunningInNativeApp()) {
+    return (
+      <main>
+        <section className="page-hero band">
+          <div className="section-heading">
+            <p className="kicker">التطبيق مثبت</p>
+            <h1>أنت تستخدم التطبيق الآن</h1>
+            <p>خيار تثبيت التطبيق يظهر في الموقع فقط. داخل تطبيق الأندرويد لن تظهر روابط تحميل APK لأن التطبيق مثبت بالفعل.</p>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main>
       <section className="page-hero band">
