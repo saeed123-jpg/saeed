@@ -148,7 +148,7 @@ function Header() {
   return (
     <header className="topbar" aria-label="رأس الصفحة">
       <a className="brand" href={pathFor()} aria-label="أطلس فلسطين التاريخي">
-        <span className="brand-mark" aria-hidden="true" />
+        <img className="brand-mark" src="/brand-logo.png" alt="" aria-hidden="true" />
         <span>أطلس فلسطين التاريخي</span>
       </a>
       <nav className="nav-links" aria-label="التنقل الرئيسي">
