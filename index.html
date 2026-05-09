@@ -10,6 +10,14 @@
     />
     <meta name="theme-color" content="#18201e" />
     <link rel="icon" href="/app-icon.svg" type="image/svg+xml" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+          .catch(() => {});
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
