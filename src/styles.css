@@ -2450,6 +2450,26 @@ figcaption {
   color: #31403a;
 }
 
+.download-primary {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--olive);
+  border-radius: 8px;
+  padding: 0 18px;
+  background: var(--olive);
+  color: #fff;
+  font-weight: 900;
+}
+
+.download-primary:hover {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #111715;
+}
+
 .download-card small {
   color: var(--muted);
   font-weight: 900;

@@ -33,6 +33,7 @@ const historyEvents = PALESTINE_HISTORY_EVENTS as HistoryEvent[];
 const villages = ATLAS_VILLAGES;
 const cityVillages = CITY_VILLAGES as CityVillage[];
 const figures = ATLAS_FIGURES;
+const APK_DOWNLOAD_URL = "/downloads/atlas-palestine.apk";
 
 function useHashRoute() {
   const [hash, setHash] = useState(() => window.location.hash || "#/");
@@ -172,7 +173,7 @@ function ToolsMenu() {
   const tools = [
     { href: pathFor("map"), label: "الخريطة", text: "مدن وقرى على خريطة تفاعلية" },
     { href: pathFor("search"), label: "بحث متقدم", text: "ابحث في كل محتوى المنصة" },
-    { href: pathFor("downloads"), label: "تحميل التطبيق", text: "EXE للويندوز وAPK للأندرويد" },
+    { href: APK_DOWNLOAD_URL, label: "تثبيت التطبيق", text: "تحميل APK للهاتف مباشرة", download: "atlas-palestine.apk" },
     { href: pathFor("timeline"), label: "خط زمني بصري", text: "استكشف الأحداث كمحطات" },
     { href: pathFor("image-audit"), label: "تحقق الصور", text: "راجع حالة الصور ومصادرها" },
     { href: pathFor("villages"), label: "القرى المهجرة", text: "ذاكرة القرى قبل وبعد التهجير" },
@@ -209,7 +210,7 @@ function ToolsMenu() {
       <div className="tools-menu-panel">
         <div className="tools-menu-grid">
           {tools.map((tool) => (
-            <a href={tool.href} key={tool.href} onClick={closeMenuAfterChoice}>
+            <a href={tool.href} key={tool.href} download={tool.download} onClick={closeMenuAfterChoice}>
               <strong>{tool.label}</strong>
               <span>{tool.text}</span>
             </a>
@@ -358,10 +359,10 @@ function LanguageSwitcher() {
 
 function DownloadAppsPanel() {
   return (
-    <div className="install-app-panel" aria-label="تحميل تطبيقات المنصة">
-      <a className="install-app-action" href={pathFor("downloads")}>تحميل التطبيق</a>
-      <span>نسخ حقيقية قيد البناء: APK للأندرويد وEXE للويندوز.</span>
-      <small>هذا ليس اختصارا من المتصفح، بل صفحة ملفات التطبيق الأصلية.</small>
+    <div className="install-app-panel" aria-label="تثبيت تطبيق المنصة">
+      <a className="install-app-action" href={APK_DOWNLOAD_URL} download="atlas-palestine.apk">تثبيت التطبيق</a>
+      <span>تحميل تطبيق الهاتف الحقيقي بصيغة APK.</span>
+      <small>بعد التحميل افتح الملف على الهاتف واسمح بالتثبيت من المتصفح.</small>
     </div>
   );
 }
@@ -387,7 +388,7 @@ function HomePage() {
     { href: pathFor("map"), label: "الخريطة", title: "خريطة تفاعلية", text: "نقاط للمدن والقرى المهجرة تساعد القارئ على ربط المكان بالذاكرة.", meta: `${CITY_MAP_POINTS.length + villages.length} نقطة` },
     { href: pathFor("search"), label: "بحث", title: "بحث متقدم", text: "محرك واحد للمدن والأحداث والعصور والقرى والشخصيات والمصطلحات.", meta: "كل المحتوى" },
     { href: pathFor("timeline"), label: "زمني", title: "خط زمني بصري", text: "قراءة الأحداث كمحطات قابلة للاختيار بدل قائمة طويلة فقط.", meta: `${historyEvents.length} محطة` },
-    { href: pathFor("downloads"), label: "تطبيق", title: "تحميل التطبيق", text: "مسار بناء تطبيق أصلي للويندوز والأندرويد بصيغ EXE وAPK.", meta: "APK / EXE" },
+    { href: APK_DOWNLOAD_URL, label: "تطبيق", title: "تثبيت التطبيق", text: "حمّل ملف APK الحقيقي للهاتف وثبته مباشرة من جهازك.", meta: "APK" },
     { href: pathFor("villages"), label: "قرى", title: "القرى المهجرة", text: "صفحة مستقلة لذاكرة القرى، قبل التهجير وبعده، مع صور حقيقية.", meta: `${villages.length} قرية` },
     { href: pathFor("figures"), label: "أعلام", title: "شخصيات وأعلام", text: "مدخل إلى شخصيات فلسطينية في الأدب والفكر والسياسة والعمل الوطني.", meta: `${figures.length} شخصية` },
     { href: pathFor("activities"), label: "أنشطة", title: "أنشطة ومراجعة", text: "اختبار قصير وبطاقات مراجعة وتحدي ترتيب زمني دون تحويل الموقع إلى منصة تعليمية كاملة.", meta: `${HOME_QUIZ.length} أسئلة` },
@@ -772,50 +773,29 @@ function SourcesPage() {
 }
 
 function DownloadsPage() {
-  const builds = [
-    {
-      label: "Windows",
-      title: "تطبيق ويندوز بصيغة EXE",
-      status: "جاهز للبناء من المشروع",
-      command: "npm run desktop:build",
-      output: "release/*.exe",
-      text: "ينتج مثبت ويندوز حقيقي يعمل كتطبيق عادي خارج المتصفح."
-    },
-    {
-      label: "Android",
-      title: "تطبيق أندرويد بصيغة APK",
-      status: "يحتاج Android Studio أو JDK وAndroid SDK",
-      command: "npm run android:apk",
-      output: "android/app/build/outputs/apk/debug/*.apk",
-      text: "ينتج ملف APK حقيقي يمكن نقله للهاتف وتثبيته بعد السماح بالتثبيت من مصادر خارجية."
-    }
-  ];
-
   return (
     <main>
       <section className="page-hero band">
         <div className="section-heading">
-          <p className="kicker">تطبيقات أصلية</p>
-          <h1>تحميل تطبيق أطلس فلسطين</h1>
-          <p>هذه الصفحة مخصصة للتطبيق الحقيقي، لا لاختصار المتصفح. تم تجهيز المشروع ليبني نسخة EXE للويندوز ونسخة APK للأندرويد.</p>
+          <p className="kicker">تطبيق الهاتف</p>
+          <h1>تثبيت تطبيق أطلس فلسطين</h1>
+          <p>هذا رابط التطبيق الحقيقي للهاتف بصيغة APK. ليس اختصارا من المتصفح ولا إضافة إلى الشاشة الرئيسية.</p>
         </div>
       </section>
       <section className="downloads band">
         <div className="download-grid">
-          {builds.map((item) => (
-            <article className="download-card" key={item.label}>
-              <span>{item.label}</span>
-              <h2>{item.title}</h2>
-              <strong>{item.status}</strong>
-              <p>{item.text}</p>
-              <code>{item.command}</code>
-              <small>مكان الملف بعد البناء: {item.output}</small>
-            </article>
-          ))}
+          <article className="download-card">
+            <span>Android APK</span>
+            <h2>تطبيق الهاتف جاهز للتثبيت</h2>
+            <strong>ملف APK الحقيقي مرفق داخل الموقع.</strong>
+            <p>اضغط الزر من الهاتف، وبعد اكتمال التحميل افتح الملف ووافق على التثبيت من المتصفح إذا طلب منك أندرويد ذلك.</p>
+            <a className="download-primary" href={APK_DOWNLOAD_URL} download="atlas-palestine.apk">تثبيت التطبيق</a>
+            <small>اسم الملف: atlas-palestine.apk</small>
+          </article>
         </div>
         <div className="download-note">
           <h2>مهم</h2>
-          <p>ملفات EXE وAPK كبيرة ولا تُبنى داخل المتصفح. تبنى من التيرمنل، ثم يمكن رفعها لاحقا إلى GitHub Releases أو وضع روابط تحميل مباشرة لها.</p>
+          <p>على بعض الهواتف سيظهر الملف أولا كتحميل، ثم تضغط "فتح" أو تفتحه من مجلد التنزيلات لإكمال التثبيت. هذه خطوة أمان طبيعية في أندرويد.</p>
         </div>
       </section>
     </main>
