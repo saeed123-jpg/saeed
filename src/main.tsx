@@ -28,11 +28,6 @@ declare global {
   }
 }
 
-type BeforeInstallPromptEvent = Event & {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
-};
-
 const cities = PALESTINE_CITIES as City[];
 const historyEvents = PALESTINE_HISTORY_EVENTS as HistoryEvent[];
 const villages = ATLAS_VILLAGES;
@@ -177,6 +172,7 @@ function ToolsMenu() {
   const tools = [
     { href: pathFor("map"), label: "الخريطة", text: "مدن وقرى على خريطة تفاعلية" },
     { href: pathFor("search"), label: "بحث متقدم", text: "ابحث في كل محتوى المنصة" },
+    { href: pathFor("downloads"), label: "تحميل التطبيق", text: "EXE للويندوز وAPK للأندرويد" },
     { href: pathFor("timeline"), label: "خط زمني بصري", text: "استكشف الأحداث كمحطات" },
     { href: pathFor("image-audit"), label: "تحقق الصور", text: "راجع حالة الصور ومصادرها" },
     { href: pathFor("villages"), label: "القرى المهجرة", text: "ذاكرة القرى قبل وبعد التهجير" },
@@ -360,50 +356,12 @@ function LanguageSwitcher() {
   );
 }
 
-function InstallAppButton() {
-  const [promptEvent, setPromptEvent] = useState<BeforeInstallPromptEvent | null>(null);
-  const [status, setStatus] = useState("");
-  const [installed, setInstalled] = useState(() => window.matchMedia?.("(display-mode: standalone)").matches || (navigator as any).standalone);
-
-  useEffect(() => {
-    const onBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setPromptEvent(event as BeforeInstallPromptEvent);
-      setStatus("");
-    };
-    const onInstalled = () => {
-      setInstalled(true);
-      setPromptEvent(null);
-      setStatus("تم تثبيت التطبيق على جهازك.");
-    };
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-    window.addEventListener("appinstalled", onInstalled);
-    return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", onInstalled);
-    };
-  }, []);
-
-  async function installApp() {
-    if (installed) {
-      setStatus("التطبيق مثبت بالفعل على هذا الجهاز.");
-      return;
-    }
-    if (promptEvent) {
-      await promptEvent.prompt();
-      const choice = await promptEvent.userChoice;
-      setPromptEvent(null);
-      setStatus(choice.outcome === "accepted" ? "بدأ تثبيت التطبيق." : "يمكنك تثبيته لاحقا من نفس الزر.");
-      return;
-    }
-    setStatus("إذا لم تظهر نافذة التثبيت، افتح قائمة المتصفح واختر: تثبيت التطبيق أو إضافة إلى الشاشة الرئيسية.");
-  }
-
+function DownloadAppsPanel() {
   return (
-    <div className="install-app-panel" aria-label="تثبيت المنصة كتطبيق">
-      <button type="button" onClick={installApp}>{installed ? "التطبيق مثبت" : "تثبيت التطبيق"}</button>
-      <span>استخدم المنصة كتطبيق على الهاتف أو الكمبيوتر.</span>
-      {status && <small>{status}</small>}
+    <div className="install-app-panel" aria-label="تحميل تطبيقات المنصة">
+      <a className="install-app-action" href={pathFor("downloads")}>تحميل التطبيق</a>
+      <span>نسخ حقيقية قيد البناء: APK للأندرويد وEXE للويندوز.</span>
+      <small>هذا ليس اختصارا من المتصفح، بل صفحة ملفات التطبيق الأصلية.</small>
     </div>
   );
 }
@@ -429,6 +387,7 @@ function HomePage() {
     { href: pathFor("map"), label: "الخريطة", title: "خريطة تفاعلية", text: "نقاط للمدن والقرى المهجرة تساعد القارئ على ربط المكان بالذاكرة.", meta: `${CITY_MAP_POINTS.length + villages.length} نقطة` },
     { href: pathFor("search"), label: "بحث", title: "بحث متقدم", text: "محرك واحد للمدن والأحداث والعصور والقرى والشخصيات والمصطلحات.", meta: "كل المحتوى" },
     { href: pathFor("timeline"), label: "زمني", title: "خط زمني بصري", text: "قراءة الأحداث كمحطات قابلة للاختيار بدل قائمة طويلة فقط.", meta: `${historyEvents.length} محطة` },
+    { href: pathFor("downloads"), label: "تطبيق", title: "تحميل التطبيق", text: "مسار بناء تطبيق أصلي للويندوز والأندرويد بصيغ EXE وAPK.", meta: "APK / EXE" },
     { href: pathFor("villages"), label: "قرى", title: "القرى المهجرة", text: "صفحة مستقلة لذاكرة القرى، قبل التهجير وبعده، مع صور حقيقية.", meta: `${villages.length} قرية` },
     { href: pathFor("figures"), label: "أعلام", title: "شخصيات وأعلام", text: "مدخل إلى شخصيات فلسطينية في الأدب والفكر والسياسة والعمل الوطني.", meta: `${figures.length} شخصية` },
     { href: pathFor("activities"), label: "أنشطة", title: "أنشطة ومراجعة", text: "اختبار قصير وبطاقات مراجعة وتحدي ترتيب زمني دون تحويل الموقع إلى منصة تعليمية كاملة.", meta: `${HOME_QUIZ.length} أسئلة` },
@@ -445,7 +404,7 @@ function HomePage() {
         <CommonsImage className="hero-image" queries={HERO_IMAGE_QUERIES} alt="صورة حقيقية لمدينة القدس أو مشهد من فلسطين التاريخية" placeholder="جاري تحميل صورة حقيقية من مصدر مفتوح..." />
         <div className="hero-shade" aria-hidden="true" />
         <div className="hero-content">
-          <InstallAppButton />
+          <DownloadAppsPanel />
           <p className="kicker">أطلس تاريخي وجغرافي وسياسي</p>
           <h1 id="hero-title">فلسطين عبر العصور</h1>
           <p className="hero-copy">مدخل هادئ إلى تاريخ فلسطين ومدنها وجغرافيتها ومحطاتها الدينية والسياسية. اختر النافذة التي تريدها من البطاقات أو من القائمة العلوية.</p>
@@ -806,6 +765,57 @@ function SourcesPage() {
           {HOME_SOURCES.map((source) => (
             <a href={source.href} target="_blank" rel="noreferrer" key={source.href}>{source.label}</a>
           ))}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function DownloadsPage() {
+  const builds = [
+    {
+      label: "Windows",
+      title: "تطبيق ويندوز بصيغة EXE",
+      status: "جاهز للبناء من المشروع",
+      command: "npm run desktop:build",
+      output: "release/*.exe",
+      text: "ينتج مثبت ويندوز حقيقي يعمل كتطبيق عادي خارج المتصفح."
+    },
+    {
+      label: "Android",
+      title: "تطبيق أندرويد بصيغة APK",
+      status: "يحتاج Android Studio أو JDK وAndroid SDK",
+      command: "npm run android:apk",
+      output: "android/app/build/outputs/apk/debug/*.apk",
+      text: "ينتج ملف APK حقيقي يمكن نقله للهاتف وتثبيته بعد السماح بالتثبيت من مصادر خارجية."
+    }
+  ];
+
+  return (
+    <main>
+      <section className="page-hero band">
+        <div className="section-heading">
+          <p className="kicker">تطبيقات أصلية</p>
+          <h1>تحميل تطبيق أطلس فلسطين</h1>
+          <p>هذه الصفحة مخصصة للتطبيق الحقيقي، لا لاختصار المتصفح. تم تجهيز المشروع ليبني نسخة EXE للويندوز ونسخة APK للأندرويد.</p>
+        </div>
+      </section>
+      <section className="downloads band">
+        <div className="download-grid">
+          {builds.map((item) => (
+            <article className="download-card" key={item.label}>
+              <span>{item.label}</span>
+              <h2>{item.title}</h2>
+              <strong>{item.status}</strong>
+              <p>{item.text}</p>
+              <code>{item.command}</code>
+              <small>مكان الملف بعد البناء: {item.output}</small>
+            </article>
+          ))}
+        </div>
+        <div className="download-note">
+          <h2>مهم</h2>
+          <p>ملفات EXE وAPK كبيرة ولا تُبنى داخل المتصفح. تبنى من التيرمنل، ثم يمكن رفعها لاحقا إلى GitHub Releases أو وضع روابط تحميل مباشرة لها.</p>
         </div>
       </section>
     </main>
@@ -2005,6 +2015,7 @@ function App() {
     if (page === "era") return <EraDetailPage id={route[1]} />;
     if (page === "history") return <HistoryPage />;
     if (page === "dossiers") return <DossiersPage />;
+    if (page === "downloads") return <DownloadsPage />;
     if (page === "map") return <MapPage />;
     if (page === "search") return <AdvancedSearchPage />;
     if (page === "timeline") return <VisualTimelinePage />;
@@ -2028,14 +2039,14 @@ function App() {
   );
 }
 
-function registerAppServiceWorker() {
+function unregisterBrowserShortcutWorker() {
   if (!("serviceWorker" in navigator)) return;
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
-      // The platform still works as a normal website if service worker registration fails.
-    });
+    navigator.serviceWorker.getRegistrations()
+      .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+      .catch(() => {});
   });
 }
 
-registerAppServiceWorker();
+unregisterBrowserShortcutWorker();
 createRoot(document.getElementById("root")!).render(<App />);

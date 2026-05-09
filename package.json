@@ -3,19 +3,59 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "build": "npm run build:web",
+    "build:web": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "desktop:dev": "npm run build:web && electron .",
+    "desktop:build": "npm run build:web && electron-builder --win nsis --x64",
+    "android:sync": "npm run build:web && cap sync android",
+    "android:open": "npm run android:sync && cap open android",
+    "android:apk": "npm run build:web && cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.3",
+    "@capacitor/core": "^8.3.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.2.6",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3"
+    "typescript": "^5.9.3",
+    "vite": "^7.2.6"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@capacitor/cli": "^8.3.3",
+    "electron": "^42.0.1",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.saeed.atlaspalestine",
+    "productName": "أطلس فلسطين التاريخي",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "أطلس فلسطين التاريخي"
+    }
+  }
 }

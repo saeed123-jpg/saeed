@@ -178,14 +178,16 @@ a {
   backdrop-filter: blur(14px);
 }
 
-.install-app-panel button {
+.install-app-action {
+  display: inline-flex;
   min-height: 42px;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--gold);
   border-radius: 8px;
   padding: 0 14px;
   background: var(--gold);
   color: #111715;
-  cursor: pointer;
   font-weight: 900;
   white-space: nowrap;
 }
@@ -2401,6 +2403,63 @@ figcaption {
   background: #eef2ef;
 }
 
+.downloads {
+  background: var(--paper);
+}
+
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.download-card,
+.download-note {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 24px;
+  background: var(--surface);
+  box-shadow: 0 16px 34px rgba(24, 32, 30, 0.07);
+}
+
+.download-card {
+  display: grid;
+  gap: 10px;
+}
+
+.download-card > span {
+  width: fit-content;
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: rgba(47, 127, 171, 0.12);
+  color: #195678;
+  font-weight: 900;
+}
+
+.download-card strong {
+  color: var(--olive-dark);
+}
+
+.download-card code {
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+  padding: 12px;
+  direction: ltr;
+  text-align: left;
+  background: #eef2ef;
+  color: #31403a;
+}
+
+.download-card small {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.download-note {
+  margin-top: 18px;
+  border-right: 5px solid var(--gold);
+}
+
 .atlas-map-layout {
   display: grid;
   grid-template-columns: minmax(320px, 1.35fr) minmax(260px, 0.65fr);
@@ -3116,6 +3175,7 @@ figcaption {
   .audit-summary,
   .audit-grid,
   .city-village-grid,
+  .download-grid,
   .theme-grid,
   .milestone-grid,
   .glossary-grid,
@@ -3244,7 +3304,7 @@ figcaption {
     grid-template-columns: 1fr;
   }
 
-  .install-app-panel button {
+  .install-app-action {
     width: 100%;
   }
 
@@ -3300,6 +3360,7 @@ figcaption {
   .history-learning-grid,
   .city-learning-grid,
   .city-village-grid,
+  .download-grid,
   .city-village-toolbar,
   .city-card-grid,
   .history-stats,
